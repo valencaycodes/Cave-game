@@ -8,7 +8,7 @@
 <style>
 * {
   box-sizing: border-box;
-  font-family: "Times New Roman","sans serif", cursive;
+  font-family: "Times New Roman", serif;
 }
 
 body {
@@ -59,13 +59,13 @@ h1 {
 
 input {
   padding: 10px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   margin: 15px 0;
 }
 
 button {
   padding: 12px 20px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   cursor: pointer;
 }
 
@@ -75,7 +75,7 @@ button {
 }
 
 .timer {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   margin-bottom: 20px;
 }
 
@@ -94,7 +94,7 @@ button {
   border-radius: 6px;
   position: relative;
   cursor: pointer;
-  transition: transform 0.3s;
+  transition: transform 0.25s;
 }
 
 .door:hover {
@@ -183,16 +183,15 @@ let startTime;
 let name = "";
 
 /*
-Fix 1 probability structure:
-Rounds 1–2: only 1 safe
-Rounds 3–5: 2 safe, 1 death
+Final difficulty:
+Round 5 has only ONE safe (treasure)
 */
 const rounds = [
-  {doors: 2, safe: 1},
-  {doors: 2, safe: 1},
-  {doors: 3, safe: 2},
-  {doors: 3, safe: 2},
-  {doors: 3, safe: 2}
+  { doors: 2, safe: 1 },
+  { doors: 2, safe: 1 },
+  { doors: 3, safe: 2 },
+  { doors: 3, safe: 2 },
+  { doors: 3, safe: 1 } // FINAL TREASURE
 ];
 
 function show(id) {
@@ -220,7 +219,7 @@ function renderDoors() {
   const container = document.getElementById("doors");
   container.innerHTML = "";
 
-  const {doors, safe} = rounds[round];
+  const { doors, safe } = rounds[round];
 
   let outcomes = Array(safe).fill(true)
     .concat(Array(doors - safe).fill(false))
@@ -257,8 +256,8 @@ function win() {
 
 function saveScore(name, time) {
   let data = JSON.parse(localStorage.getItem("caveScores") || "[]");
-  data.push({name, time});
-  data.sort((a,b) => a.time - b.time);
+  data.push({ name, time });
+  data.sort((a, b) => a.time - b.time);
   data = data.slice(0, 10);
   localStorage.setItem("caveScores", JSON.stringify(data));
 }
@@ -271,8 +270,8 @@ function showResults(time) {
     `Your time: ${time.toFixed(2)}s<br>Your rank: ${rank || "Unranked"}`;
 
   let html = "<h3>Top 10 Explorers</h3>";
-  data.forEach((d,i) => {
-    html += `${i+1}. ${d.name} — ${d.time.toFixed(2)}s<br>`;
+  data.forEach((d, i) => {
+    html += `${i + 1}. ${d.name} — ${d.time.toFixed(2)}s<br>`;
   });
 
   document.getElementById("leaderboard").innerHTML = html;
