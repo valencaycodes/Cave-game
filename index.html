@@ -1,224 +1,271 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Cave Game</title>
 
 <style>
-    html, body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        font-family: 'Times New Roman', serif;"
-    }
+/* ---------- GLOBAL ---------- */
+* {
+  box-sizing: border-box;
+  font-family: "Chiller", "Old English Text MT", "Informal Roman", cursive;
+}
 
-    .screen {
-        display: none;
-        height: 100vh;
-        width: 100vw;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        text-align: center;
-    }
+body {
+  margin: 0;
+  color: #fff;
+}
 
-    .active {
-        display: flex;
-    }
+/* ---------- SCREENS ---------- */
+.screen {
+  display: none;
+  min-height: 100vh;
+  padding: 20px;
+}
 
-    /* ---------- INTRO SCREEN ---------- */
-    #intro {
-        background: url("cave-bg(1).JPG") center/cover no-repeat;
-        color: #f5f5f5;
-        text-shadow: 2px 2px 6px black;
-    }
+.active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 
-    #intro h1 {
-        font-size: 3rem;
-        margin-bottom: 0.5rem;
-    }
+/* ---------- START SCREEN ---------- */
+#start {
+  background: url("cave-bg(1).jpg") center/cover no-repeat;
+  position: relative;
+}
 
-    #intro h2 {
-        font-size: 1.5rem;
-        margin: 0.5rem 0;
-    }
+#start::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+}
 
-    #intro p {
-        font-size: 1.2rem;
-        margin-bottom: 1.5rem;
-    }
+#start * {
+  position: relative;
+  z-index: 1;
+}
 
-    button {
-        padding: 12px 24px;
-        font-size: 1.2rem;
-        cursor: pointer;
-        border: none;
-        border-radius: 6px;
-    }
+h1 {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
 
-    #enterBtn {
-        background: #2e2e2e;
-        color: #fff;
-    }
+.subtitle {
+  font-size: 1.4rem;
+  margin: 5px 0;
+}
 
-    /* ---------- DOOR SCREEN ---------- */
-    #doors {
-        background: radial-gradient(circle, #1f5f2a 0%, #000 70%);
-        color: white;
-    }
+input {
+  padding: 10px;
+  font-size: 1.2rem;
+  margin: 15px 0;
+}
 
-    .door-container {
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
+button {
+  padding: 12px 20px;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
 
-    .door {
-        width: 80px;
-        height: 180px;
-        background: linear-gradient(145deg, #4b2e1a, #2b160b);
-        border: 3px solid #1a0d05;
-        border-radius: 6px;
-        position: relative;
-        cursor: pointer;
-        transition: transform 0.3s;
-    }
+/* ---------- GAME SCREEN ---------- */
+#game {
+  background: radial-gradient(circle, #1e7f2b 0%, #000 70%);
+}
 
-    .door:hover {
-        transform: scale(1.05);
-    }
+.timer {
+  font-size: 1.4rem;
+  margin-bottom: 20px;
+}
 
-    .knob {
-        width: 12px;
-        height: 12px;
-        background: gold;
-        border-radius: 50%;
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-    }
+.doors {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
 
-    /* ---------- DEATH SCREEN ---------- */
-    #death {
-        background: radial-gradient(circle, darkred 0%, green 70%);
-        color: black;
-    }
+.door {
+  width: 90px;
+  height: 200px;
+  background: linear-gradient(#3b1f0f, #2a140a);
+  border: 3px solid #1a0d06;
+  border-radius: 5px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
 
-    #death h1 {
-        font-size: 3rem;
-        color: black;
-    }
+.door:hover {
+  transform: scale(1.05);
+}
 
-    .skull {
-        font-size: 6rem;
-    }
+.knob {
+  width: 14px;
+  height: 14px;
+  background: gold;
+  border-radius: 50%;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+}
 
-    /* ---------- TREASURE SCREEN ---------- */
-    #treasure {
-        background: radial-gradient(circle, gold 0%, green 70%);
-        color: #8b6b00;
-    }
+/* ---------- DEATH ---------- */
+#death {
+  background: radial-gradient(circle, red 0%, green 70%);
+}
 
-    #treasure h1 {
-        font-size: 3rem;
-        color: white;
-    }
+.skull {
+  font-size: 5rem;
+}
 
-    .chest {
-        font-size: 6rem;
-    }
+.death-text {
+  color: darkred;
+  font-size: 3rem;
+}
+
+/* ---------- TREASURE ---------- */
+#win {
+  background: radial-gradient(circle, yellow 0%, green 70%);
+  color: black;
+}
+
+.treasure {
+  font-size: 4rem;
+}
+
+/* ---------- LEADERBOARD ---------- */
+.leaderboard {
+  margin-top: 20px;
+  text-align: left;
+}
 </style>
 </head>
 
 <body>
 
-<!-- INTRO -->
-<div id="intro" class="screen active">
-    <h1>Cave Game</h1>
-    <h2>Do you have what it takes to get the treasure?</h2>
-    <p>Play if you dare</p>
-    <button id="enterBtn">Enter the Cave</button>
+<!-- START -->
+<div id="start" class="screen active">
+  <h1>Cave Game</h1>
+  <div class="subtitle">Do you have what it takes to get the treasure?</div>
+  <div class="subtitle">Play if you dare</div>
+
+  <input id="playerName" placeholder="Enter your name">
+  <button onclick="startGame()">Enter the Cave</button>
 </div>
 
-<!-- DOORS -->
-<div id="doors" class="screen">
-    <h2>Choose a Door</h2>
-    <p>Choice <span id="step">1</span> of 5</p>
-    <div class="door-container" id="doorContainer"></div>
+<!-- GAME -->
+<div id="game" class="screen">
+  <div class="timer">Time: <span id="time">0.00</span>s</div>
+  <div class="doors" id="doors"></div>
 </div>
 
 <!-- DEATH -->
 <div id="death" class="screen">
-    <div class="skull">☠️</div>
-    <h1>YOU DIED</h1>
-    <button onclick="restartGame()">wanna play again?</button>
+  <div class="skull">☠️</div>
+  <div class="death-text">YOU DIED</div>
+  <button onclick="resetGame()">Wanna play again?</button>
 </div>
 
-<!-- TREASURE -->
-<div id="treasure" class="screen">
-    <div class="chest">💰🏆</div>
-    <h1>YOU WIN</h1>
-    <button onclick="restartGame()">Play Again</button>
+<!-- WIN -->
+<div id="win" class="screen">
+  <div class="treasure">💰💎</div>
+  <h1>You Win</h1>
+  <div id="result"></div>
+  <div class="leaderboard" id="leaderboard"></div>
+  <button onclick="resetGame()">Play Again</button>
 </div>
 
 <script>
-let currentStep = 1;
-const totalSteps = 5;
+let round = 0;
+let timer;
+let startTime;
+let name = "";
 
-document.getElementById("enterBtn").onclick = () => {
-    showScreen("doors");
-    generateDoors();
-};
+const rounds = [2,2,3,3,3];
 
-function showScreen(id) {
-    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
-function generateDoors() {
-    const container = document.getElementById("doorContainer");
-    container.innerHTML = "";
+function startGame() {
+  name = document.getElementById("playerName").value.trim();
+  if (!name) return alert("Enter your name!");
 
-    let doorCount = currentStep <= 2 ? 2 : 3;
-
-    for (let i = 0; i < doorCount; i++) {
-        const door = document.createElement("div");
-        door.className = "door";
-
-        const knob = document.createElement("div");
-        knob.className = "knob";
-        door.appendChild(knob);
-
-        door.onclick = () => chooseDoor(i, doorCount);
-        container.appendChild(door);
-    }
-
-    document.getElementById("step").textContent = currentStep;
+  round = 0;
+  startTime = Date.now();
+  timer = setInterval(updateTimer, 50);
+  show("game");
+  renderDoors();
 }
 
-function chooseDoor(choice, doorCount) {
-    const safeDoor = Math.floor(Math.random() * doorCount);
-
-    if (choice !== safeDoor) {
-        showScreen("death");
-        return;
-    }
-
-    currentStep++;
-
-    if (currentStep > totalSteps) {
-        showScreen("treasure");
-    } else {
-        generateDoors();
-    }
+function updateTimer() {
+  document.getElementById("time").textContent =
+    ((Date.now() - startTime)/1000).toFixed(2);
 }
 
-function restartGame() {
-    currentStep = 1;
-    showScreen("intro");
+function renderDoors() {
+  const container = document.getElementById("doors");
+  container.innerHTML = "";
+  const count = rounds[round];
+  const safeDoor = Math.floor(Math.random()*count);
+
+  for (let i=0;i<count;i++) {
+    const d = document.createElement("div");
+    d.className = "door";
+    d.innerHTML = `<div class="knob"></div>`;
+    d.onclick = () => chooseDoor(i === safeDoor);
+    container.appendChild(d);
+  }
+}
+
+function chooseDoor(safe) {
+  if (!safe) {
+    clearInterval(timer);
+    show("death");
+    return;
+  }
+  round++;
+  if (round === rounds.length) win();
+  else renderDoors();
+}
+
+function win() {
+  clearInterval(timer);
+  const time = (Date.now() - startTime)/1000;
+  saveScore(name, time);
+  show("win");
+  showResults(time);
+}
+
+function saveScore(name, time) {
+  let data = JSON.parse(localStorage.getItem("caveScores") || "[]");
+  data.push({name, time});
+  data.sort((a,b)=>a.time-b.time);
+  data = data.slice(0,10);
+  localStorage.setItem("caveScores", JSON.stringify(data));
+}
+
+function showResults(time) {
+  const data = JSON.parse(localStorage.getItem("caveScores") || "[]");
+  const rank = data.findIndex(d=>d.name===name && d.time===time)+1;
+  document.getElementById("result").innerHTML =
+    `Your time: ${time.toFixed(2)}s<br>Your rank: ${rank || "Unranked"}`;
+
+  let html = "<h3>Top 10 Explorers</h3>";
+  data.forEach((d,i)=>{
+    html += `${i+1}. ${d.name} — ${d.time.toFixed(2)}s<br>`;
+  });
+  document.getElementById("leaderboard").innerHTML = html;
+}
+
+function resetGame() {
+  location.reload();
 }
 </script>
 
