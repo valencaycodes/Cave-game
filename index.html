@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Door Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+/* ---------- GLOBAL ---------- */
+body {
+  margin: 0;
+  font-family: 'Press Start 2P', cursive;
+  background: radial-gradient(circle at top, #1f3b2c, #050807);
+  color: #e6e6e6;
+  text-align: center;
+}
+
+.screen {
+  display: none;
+  max-width: 420px;
+  margin: auto;
+  padding: 20px;
+}
+
+.active {
+  display: block;
+}
+
+h1 {
+  font-size: 1rem;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 6px black;
+}
+
+p {
+  font-size: 0.7rem;
+  line-height: 1.6;
+}
+
+/* ---------- BUTTONS ---------- */
+button {
+  font-family: inherit;
+  padding: 14px;
+  margin: 12px 0;
+  width: 100%;
+  background: #3b4a3f;
+  border: 2px solid #1c241e;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #4e5f52;
+}
+
+/* ---------- START SCREEN ---------- */
+.start-screen {
+  background: url("cave-bg(1).jpg") no-repeat center center;
+  background-size: cover;
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.start-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 0;
+}
+
+.start-screen * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- DOORS ---------- */
+.doors {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.door {
+  flex: 1;
+  height: 160px;
+  background: linear-gradient(#4b3621, #2a1c10);
+  border: 3px solid #1a1008;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.25s;
+}
+
+.door:hover {
+  transform: scale(1.05);
+}
+
+.door::after {
+  content: "🕷️";
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  opacity: 0.6;
+}
+
+/* Correct door glow (levels 4–5 only) */
+.hint {
+  box-shadow: 0 0 18px rgba(200, 200, 140, 0.6);
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 480px) {
+  h1 { font-size: 0.9rem; }
+  p { font-size: 0.65rem; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- START -->
+<div id="start" class="screen active start-screen">
+  <h1>THE DOOR GAME</h1>
+  <p>
+    Five doors.<br>
+    One treasure.<br>
+    One wrong choice ends everything.
+  </p>
+  <button onclick="startGame()">ENTER THE CAVE</button>
+</div>
+
+<!-- GAME -->
+<div id="game" class="screen">
+  <h1 id="levelText"></h1>
+  <p id="clue"></p>
+  <div class="doors" id="doors"></div>
+</div>
+
+<!-- DEATH -->
+<div id="death" class="screen">
+  <h1>YOU DIED</h1>
+  <p id="deathText"></p>
+  <button onclick="reveal()">SEE WHAT WOULD HAVE HAPPENED</button>
+  <button onclick="startGame()">PLAY AGAIN</button>
+</div>
+
+<!-- END -->
+<div id="end" class="screen">
+  <h1>TREASURE FOUND</h1>
+  <p>You survived uncertainty.</p>
+  <p id="explain"></p>
+  <button onclick="startGame()">PLAY AGAIN</button>
+</div>
+
+<script>
+/* ---------- GAME LOGIC ---------- */
+let level = 1;
+let correctDoor = 0;
+
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+  level = 1;
+  nextLevel();
+}
+
+function nextLevel() {
+  switchScreen('game');
+  document.getElementById('doors').innerHTML = "";
+  document.getElementById('clue').textContent = "";
+  document.getElementById('levelText').textContent = "DOOR " + level;
+
+  const doorCount = level <= 2 ? 2 : 3;
+  correctDoor = Math.floor(Math.random() * doorCount);
+
+  for (let i = 0; i < doorCount; i++) {
+    const door = document.createElement('div');
+    door.className = "door";
+
+    if (level >= 4 && i === correctDoor) {
+      door.classList.add("hint");
+    }
+
+    if (level === 4) {
+      document.getElementById('clue').textContent =
+        "The clean door is not the one.";
+    }
+
+    if (level === 5) {
+      document.getElementById('clue').textContent =
+        "The door to my right is the one.";
+    }
+
+    door.onclick = () => chooseDoor(i);
+    document.getElementById('doors').appendChild(door);
+  }
+}
+
+function chooseDoor(choice) {
+  if (choice === correctDoor) {
+    level++;
+    if (level > 5) {
+      endGame();
+    } else {
+      nextLevel();
+    }
+  } else {
+    die();
+  }
+}
+
+function die() {
+  switchScreen('death');
+  document.getElementById('deathText').textContent =
+    "You made a decision with limited information.";
+}
+
+function reveal() {
+  document.getElementById('deathText').textContent =
+    "The correct door was revealed only after the choice.";
+}
+
+function endGame() {
+  switchScreen('end');
+  document.getElementById('explain').textContent =
+    "Early doors had no information. Later doors had clues, but not certainty. Confidence increased faster than accuracy.";
+}
+</script>
+
+</body>
+</html>
