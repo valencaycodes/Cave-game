@@ -2,236 +2,223 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>The Door Game</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<title>Cave Game</title>
 
 <style>
-/* ---------- GLOBAL ---------- */
-body {
-  margin: 0;
-  font-family: 'Press Start 2P', cursive;
-  background: radial-gradient(circle at top, #1f3b2c, #050807);
-  color: #e6e6e6;
-  text-align: center;
-}
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: "Chiller", "Old English Text MT", "Informal Roman", cursive;
+    }
 
-.screen {
-  display: none;
-  max-width: 420px;
-  margin: auto;
-  padding: 20px;
-}
+    .screen {
+        display: none;
+        height: 100vh;
+        width: 100vw;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        text-align: center;
+    }
 
-.active {
-  display: block;
-}
+    .active {
+        display: flex;
+    }
 
-h1 {
-  font-size: 1rem;
-  margin-bottom: 20px;
-  text-shadow: 2px 2px 6px black;
-}
+    /* ---------- INTRO SCREEN ---------- */
+    #intro {
+        background: url("cave-bg(1).jpg") center/cover no-repeat;
+        color: #f5f5f5;
+        text-shadow: 2px 2px 6px black;
+    }
 
-p {
-  font-size: 0.7rem;
-  line-height: 1.6;
-}
+    #intro h1 {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+    }
 
-/* ---------- BUTTONS ---------- */
-button {
-  font-family: inherit;
-  padding: 14px;
-  margin: 12px 0;
-  width: 100%;
-  background: #3b4a3f;
-  border: 2px solid #1c241e;
-  color: #fff;
-  cursor: pointer;
-}
+    #intro h2 {
+        font-size: 1.5rem;
+        margin: 0.5rem 0;
+    }
 
-button:hover {
-  background: #4e5f52;
-}
+    #intro p {
+        font-size: 1.2rem;
+        margin-bottom: 1.5rem;
+    }
 
-/* ---------- START SCREEN ---------- */
-.start-screen {
-  background: url("cave-bg(1).jpg") no-repeat center center;
-  background-size: cover;
-  min-height: 100vh;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
+    button {
+        padding: 12px 24px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+    }
 
-.start-screen::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 0;
-}
+    #enterBtn {
+        background: #2e2e2e;
+        color: #fff;
+    }
 
-.start-screen * {
-  position: relative;
-  z-index: 1;
-}
+    /* ---------- DOOR SCREEN ---------- */
+    #doors {
+        background: radial-gradient(circle, #1f5f2a 0%, #000 70%);
+        color: white;
+    }
 
-/* ---------- DOORS ---------- */
-.doors {
-  display: flex;
-  gap: 15px;
-  margin-top: 30px;
-}
+    .door-container {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
 
-.door {
-  flex: 1;
-  height: 160px;
-  background: linear-gradient(#4b3621, #2a1c10);
-  border: 3px solid #1a1008;
-  position: relative;
-  cursor: pointer;
-  transition: transform 0.25s;
-}
+    .door {
+        width: 80px;
+        height: 180px;
+        background: linear-gradient(145deg, #4b2e1a, #2b160b);
+        border: 3px solid #1a0d05;
+        border-radius: 6px;
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.3s;
+    }
 
-.door:hover {
-  transform: scale(1.05);
-}
+    .door:hover {
+        transform: scale(1.05);
+    }
 
-.door::after {
-  content: "🕷️";
-  position: absolute;
-  bottom: 6px;
-  right: 6px;
-  opacity: 0.6;
-}
+    .knob {
+        width: 12px;
+        height: 12px;
+        background: gold;
+        border-radius: 50%;
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
 
-/* Correct door glow (levels 4–5 only) */
-.hint {
-  box-shadow: 0 0 18px rgba(200, 200, 140, 0.6);
-}
+    /* ---------- DEATH SCREEN ---------- */
+    #death {
+        background: radial-gradient(circle, darkred 0%, green 70%);
+        color: darkred;
+    }
 
-/* ---------- RESPONSIVE ---------- */
-@media (max-width: 480px) {
-  h1 { font-size: 0.9rem; }
-  p { font-size: 0.65rem; }
-}
+    #death h1 {
+        font-size: 3rem;
+        color: darkred;
+    }
+
+    .skull {
+        font-size: 6rem;
+    }
+
+    /* ---------- TREASURE SCREEN ---------- */
+    #treasure {
+        background: radial-gradient(circle, gold 0%, green 70%);
+        color: #8b6b00;
+    }
+
+    #treasure h1 {
+        font-size: 3rem;
+        color: gold;
+    }
+
+    .chest {
+        font-size: 6rem;
+    }
 </style>
 </head>
 
 <body>
 
-<!-- START -->
-<div id="start" class="screen active start-screen">
-  <h1>THE DOOR GAME</h1>
-  <p>
-    Five doors.<br>
-    One treasure.<br>
-    One wrong choice ends everything.
-  </p>
-  <button onclick="startGame()">ENTER THE CAVE</button>
+<!-- INTRO -->
+<div id="intro" class="screen active">
+    <h1>Cave Game</h1>
+    <h2>Do you have what it takes to get the treasure?</h2>
+    <p>Play if you dare</p>
+    <button id="enterBtn">Enter the Cave</button>
 </div>
 
-<!-- GAME -->
-<div id="game" class="screen">
-  <h1 id="levelText"></h1>
-  <p id="clue"></p>
-  <div class="doors" id="doors"></div>
+<!-- DOORS -->
+<div id="doors" class="screen">
+    <h2>Choose a Door</h2>
+    <p>Choice <span id="step">1</span> of 5</p>
+    <div class="door-container" id="doorContainer"></div>
 </div>
 
 <!-- DEATH -->
 <div id="death" class="screen">
-  <h1>YOU DIED</h1>
-  <p id="deathText"></p>
-  <button onclick="reveal()">SEE WHAT WOULD HAVE HAPPENED</button>
-  <button onclick="startGame()">PLAY AGAIN</button>
+    <div class="skull">☠️</div>
+    <h1>YOU DIED</h1>
+    <button onclick="restartGame()">wanna play again?</button>
 </div>
 
-<!-- END -->
-<div id="end" class="screen">
-  <h1>TREASURE FOUND</h1>
-  <p>You survived uncertainty.</p>
-  <p id="explain"></p>
-  <button onclick="startGame()">PLAY AGAIN</button>
+<!-- TREASURE -->
+<div id="treasure" class="screen">
+    <div class="chest">💰🏆</div>
+    <h1>YOU WIN</h1>
+    <button onclick="restartGame()">Play Again</button>
 </div>
 
 <script>
-/* ---------- GAME LOGIC ---------- */
-let level = 1;
-let correctDoor = 0;
+let currentStep = 1;
+const totalSteps = 5;
 
-function switchScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+document.getElementById("enterBtn").onclick = () => {
+    showScreen("doors");
+    generateDoors();
+};
+
+function showScreen(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
 }
 
-function startGame() {
-  level = 1;
-  nextLevel();
+function generateDoors() {
+    const container = document.getElementById("doorContainer");
+    container.innerHTML = "";
+
+    let doorCount = currentStep <= 2 ? 2 : 3;
+
+    for (let i = 0; i < doorCount; i++) {
+        const door = document.createElement("div");
+        door.className = "door";
+
+        const knob = document.createElement("div");
+        knob.className = "knob";
+        door.appendChild(knob);
+
+        door.onclick = () => chooseDoor(i, doorCount);
+        container.appendChild(door);
+    }
+
+    document.getElementById("step").textContent = currentStep;
 }
 
-function nextLevel() {
-  switchScreen('game');
-  document.getElementById('doors').innerHTML = "";
-  document.getElementById('clue').textContent = "";
-  document.getElementById('levelText').textContent = "DOOR " + level;
+function chooseDoor(choice, doorCount) {
+    const safeDoor = Math.floor(Math.random() * doorCount);
 
-  const doorCount = level <= 2 ? 2 : 3;
-  correctDoor = Math.floor(Math.random() * doorCount);
-
-  for (let i = 0; i < doorCount; i++) {
-    const door = document.createElement('div');
-    door.className = "door";
-
-    if (level >= 4 && i === correctDoor) {
-      door.classList.add("hint");
+    if (choice !== safeDoor) {
+        showScreen("death");
+        return;
     }
 
-    if (level === 4) {
-      document.getElementById('clue').textContent =
-        "The clean door is not the one.";
-    }
+    currentStep++;
 
-    if (level === 5) {
-      document.getElementById('clue').textContent =
-        "The door to my right is the one.";
-    }
-
-    door.onclick = () => chooseDoor(i);
-    document.getElementById('doors').appendChild(door);
-  }
-}
-
-function chooseDoor(choice) {
-  if (choice === correctDoor) {
-    level++;
-    if (level > 5) {
-      endGame();
+    if (currentStep > totalSteps) {
+        showScreen("treasure");
     } else {
-      nextLevel();
+        generateDoors();
     }
-  } else {
-    die();
-  }
 }
 
-function die() {
-  switchScreen('death');
-  document.getElementById('deathText').textContent =
-    "You made a decision with limited information.";
-}
-
-function reveal() {
-  document.getElementById('deathText').textContent =
-    "The correct door was revealed only after the choice.";
-}
-
-function endGame() {
-  switchScreen('end');
-  document.getElementById('explain').textContent =
-    "Early doors had no information. Later doors had clues, but not certainty. Confidence increased faster than accuracy.";
+function restartGame() {
+    currentStep = 1;
+    showScreen("intro");
 }
 </script>
 
