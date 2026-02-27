@@ -3,19 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Cave Game</title>
 
 <style>
-/* ---------- GLOBAL ---------- */
 * {
   box-sizing: border-box;
-  font-family: "Chiller", "Old English Text MT", "Informal Roman", cursive;
+  font-family: "Times New Roman","sans serif", cursive;
 }
 
 body {
   margin: 0;
-  color: #fff;
+  color: white;
 }
 
 /* ---------- SCREENS ---------- */
@@ -32,9 +30,9 @@ body {
   justify-content: center;
 }
 
-/* ---------- START SCREEN ---------- */
+/* ---------- START ---------- */
 #start {
-  background: url("cave-bg(1).jpg") center/cover no-repeat;
+  background: url("cave-bg(1).JPG") center/cover no-repeat;
   position: relative;
 }
 
@@ -52,12 +50,11 @@ body {
 
 h1 {
   font-size: 3rem;
-  margin-bottom: 10px;
 }
 
 .subtitle {
   font-size: 1.4rem;
-  margin: 5px 0;
+  margin: 6px 0;
 }
 
 input {
@@ -72,7 +69,7 @@ button {
   cursor: pointer;
 }
 
-/* ---------- GAME SCREEN ---------- */
+/* ---------- GAME ---------- */
 #game {
   background: radial-gradient(circle, #1e7f2b 0%, #000 70%);
 }
@@ -84,24 +81,24 @@ button {
 
 .doors {
   display: flex;
-  gap: 20px;
+  gap: 25px;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .door {
   width: 90px;
-  height: 200px;
+  height: 210px;
   background: linear-gradient(#3b1f0f, #2a140a);
   border: 3px solid #1a0d06;
-  border-radius: 5px;
+  border-radius: 6px;
   position: relative;
   cursor: pointer;
   transition: transform 0.3s;
 }
 
 .door:hover {
-  transform: scale(1.05);
+  transform: scale(1.06);
 }
 
 .knob {
@@ -128,7 +125,7 @@ button {
   font-size: 3rem;
 }
 
-/* ---------- TREASURE ---------- */
+/* ---------- WIN ---------- */
 #win {
   background: radial-gradient(circle, yellow 0%, green 70%);
   color: black;
@@ -138,7 +135,6 @@ button {
   font-size: 4rem;
 }
 
-/* ---------- LEADERBOARD ---------- */
 .leaderboard {
   margin-top: 20px;
   text-align: left;
@@ -186,7 +182,18 @@ let timer;
 let startTime;
 let name = "";
 
-const rounds = [2,2,3,3,3];
+/*
+Fix 1 probability structure:
+Rounds 1–2: only 1 safe
+Rounds 3–5: 2 safe, 1 death
+*/
+const rounds = [
+  {doors: 2, safe: 1},
+  {doors: 2, safe: 1},
+  {doors: 3, safe: 2},
+  {doors: 3, safe: 2},
+  {doors: 3, safe: 2}
+];
 
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
@@ -206,30 +213,35 @@ function startGame() {
 
 function updateTimer() {
   document.getElementById("time").textContent =
-    ((Date.now() - startTime)/1000).toFixed(2);
+    ((Date.now() - startTime) / 1000).toFixed(2);
 }
 
 function renderDoors() {
   const container = document.getElementById("doors");
   container.innerHTML = "";
-  const count = rounds[round];
-  const safeDoor = Math.floor(Math.random()*count);
 
-  for (let i=0;i<count;i++) {
+  const {doors, safe} = rounds[round];
+
+  let outcomes = Array(safe).fill(true)
+    .concat(Array(doors - safe).fill(false))
+    .sort(() => Math.random() - 0.5);
+
+  outcomes.forEach(isSafe => {
     const d = document.createElement("div");
     d.className = "door";
     d.innerHTML = `<div class="knob"></div>`;
-    d.onclick = () => chooseDoor(i === safeDoor);
+    d.onclick = () => chooseDoor(isSafe);
     container.appendChild(d);
-  }
+  });
 }
 
-function chooseDoor(safe) {
-  if (!safe) {
+function chooseDoor(isSafe) {
+  if (!isSafe) {
     clearInterval(timer);
     show("death");
     return;
   }
+
   round++;
   if (round === rounds.length) win();
   else renderDoors();
@@ -237,7 +249,7 @@ function chooseDoor(safe) {
 
 function win() {
   clearInterval(timer);
-  const time = (Date.now() - startTime)/1000;
+  const time = (Date.now() - startTime) / 1000;
   saveScore(name, time);
   show("win");
   showResults(time);
@@ -246,21 +258,23 @@ function win() {
 function saveScore(name, time) {
   let data = JSON.parse(localStorage.getItem("caveScores") || "[]");
   data.push({name, time});
-  data.sort((a,b)=>a.time-b.time);
-  data = data.slice(0,10);
+  data.sort((a,b) => a.time - b.time);
+  data = data.slice(0, 10);
   localStorage.setItem("caveScores", JSON.stringify(data));
 }
 
 function showResults(time) {
   const data = JSON.parse(localStorage.getItem("caveScores") || "[]");
-  const rank = data.findIndex(d=>d.name===name && d.time===time)+1;
+  const rank = data.findIndex(d => d.name === name && d.time === time) + 1;
+
   document.getElementById("result").innerHTML =
     `Your time: ${time.toFixed(2)}s<br>Your rank: ${rank || "Unranked"}`;
 
   let html = "<h3>Top 10 Explorers</h3>";
-  data.forEach((d,i)=>{
+  data.forEach((d,i) => {
     html += `${i+1}. ${d.name} — ${d.time.toFixed(2)}s<br>`;
   });
+
   document.getElementById("leaderboard").innerHTML = html;
 }
 
