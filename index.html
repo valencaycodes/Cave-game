@@ -1,204 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cave Game</title>
+  <meta charset="UTF-8">
+  <title>Cave Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-  * { box-sizing: border-box; font-family: "Times New Roman", serif; }
-  body {
-    margin: 0;
-    height: 100vh;
-    background: black;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  .screen {
-    display: none;
-    width: 100%;
-    height: 100vh;
-    text-align: center;
-    padding: 20px;
-  }
-  .active {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-  #start {
-    background: url("cave-bg(1).JPG") center/cover no-repeat;
-  }
-  input, button {
-    padding: 10px;
-    font-size: 16px;
-    margin: 8px;
-  }
-  .consent {
-    font-size: 10px;
-    opacity: 0.8;
-    margin-top: 10px;
-  }
-  #game {
-    background: radial-gradient(circle, darkgreen 0%, black 70%);
-  }
-  .timer {
-    font-size: 18px;
-    margin-bottom: 10px;
-  }
-  .doors {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 30px;
-  }
-  .door {
-    width: 70px;
-    height: 140px;
-    background: #3b2a1a;
-    border: 2px solid gold;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  #death {
-    background: radial-gradient(circle, darkred 0%, green 70%);
-  }
-  #win {
-    background: radial-gradient(circle, gold 0%, green 70%);
-  }
-</style>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Times New Roman", serif;
+      background: black;
+      color: white;
+      text-align: center;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .active {
+      display: block;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    input {
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .consent {
+      font-size: 10px;
+      opacity: 0.6;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 
 <body>
 
-<!-- START -->
-<div id="start" class="screen active">
+<!-- ========== START SCREEN ========== -->
+<div id="startScreen" class="screen active">
   <h1>Cave Game</h1>
-  <h3>Do you have what it takes to get the treasure?</h3>
-  <h4>Play if you dare</h4>
+  <p>Do you have what it takes to get the treasure?</p>
 
-  <input id="playerName" placeholder="Enter your name">
+  <input type="text" id="playerNameInput" placeholder="Enter your name" />
+
+  <br>
   <button onclick="startGame()">Enter the Cave</button>
 
-  <div class="consent">
+  <p class="consent">
     By playing, you consent to anonymous local data collection for academic purposes.
-  </div>
+  </p>
 </div>
 
-<!-- GAME -->
-<div id="game" class="screen">
-  <div class="timer" id="timer">Time: 0.0s</div>
-  <h2 id="roundText"></h2>
-  <div class="doors" id="doors"></div>
+<!-- ========== GAME SCREEN (your doors go here) ========== -->
+<div id="gameScreen" class="screen">
+  <h2>Choose a door</h2>
+  <!-- YOUR DOOR LOGIC / BUTTONS GO HERE -->
 </div>
 
-<!-- DEATH -->
-<div id="death" class="screen">
-  <h1 style="color: darkred;">💀 YOU DIED</h1>
-  <button onclick="restart()">Wanna play again?</button>
+<!-- ========== END SCREEN ========== -->
+<div id="endScreen" class="screen">
+  <h2 id="endMessage"></h2>
+  <p id="timeText"></p>
+  <button onclick="location.reload()">Play again?</button>
 </div>
 
-<!-- WIN -->
-<div id="win" class="screen">
-  <h1 style="color: goldenrod;">💰 YOU WIN</h1>
-  <button onclick="restart()">Play Again</button>
-</div>
+<!-- ========== HIDDEN FORM (DATA SUBMISSION) ========== -->
+<form
+  id="dataForm"
+  action="https://script.google.com/macros/s/AKfycbzGBh8r0BKG7evKwX6rLKtTkM9naObZzN1DsJDt2gtWl55ladgE2Jh8e5bNGgmxSoklDw/exec"
+  method="POST"
+  target="hidden_iframe"
+  style="display:none;"
+>
+  <input type="text" name="player_name" id="formPlayerName">
+  <input type="text" name="result" id="formResult">
+  <input type="text" name="time_taken" id="formTime">
+  <input type="text" name="round_reached" id="formRound">
+</form>
+
+<iframe name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGBh8r0BKG7evKwX6rLKtTkM9naObZzN1DsJDt2gtWl55ladgE2Jh8e5bNGgmxSoklDw/exec";
+  let startTime;
+  let playerName = "";
+  let currentRound = 0;
 
-let round = 1;
-let startTime;
-let timerInterval;
-let player = "";
+  function startGame() {
+    playerName = document.getElementById("playerNameInput").value.trim();
+    if (!playerName) {
+      alert("Please enter your name");
+      return;
+    }
 
-function show(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-}
+    startTime = Date.now();
+    currentRound = 1;
 
-function startGame() {
-  player = document.getElementById("playerName").value || "Anonymous";
-  round = 1;
-  startTime = Date.now();
-  timerInterval = setInterval(updateTimer, 100);
-  show("game");
-  nextRound();
-}
-
-function updateTimer() {
-  let t = ((Date.now() - startTime) / 1000).toFixed(1);
-  document.getElementById("timer").innerText = "Time: " + t + "s";
-}
-
-function nextRound() {
-  document.getElementById("roundText").innerText = "Round " + round;
-  const doorsDiv = document.getElementById("doors");
-  doorsDiv.innerHTML = "";
-
-  let doorCount = round <= 2 ? 2 : 3;
-  let safeDoor = Math.floor(Math.random() * doorCount);
-
-  if (round === 5) {
-    safeDoor = Math.floor(Math.random() * doorCount);
+    showScreen("gameScreen");
   }
 
-  for (let i = 0; i < doorCount; i++) {
-    let d = document.createElement("div");
-    d.className = "door";
-    d.innerText = "Door";
-    d.onclick = () => chooseDoor(i === safeDoor);
-    doorsDiv.appendChild(d);
-  }
-}
+  function endGame(result) {
+    const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
-function chooseDoor(safe) {
-  if (!safe) {
-    clearInterval(timerInterval);
-    let timeTaken = ((Date.now() - startTime) / 1000).toFixed(2);
-    sendDataToGoogle(player, timeTaken, "Died", round);
-    show("death");
-    return;
+    document.getElementById("endMessage").innerText =
+      result === "Win" ? "You found the treasure!" : "You died.";
+
+    document.getElementById("timeText").innerText =
+      "Time taken: " + elapsedTime + " seconds";
+
+    submitGameData(playerName, result, elapsedTime, currentRound);
+
+    showScreen("endScreen");
   }
 
-  if (round === 5) {
-    winGame();
-  } else {
-    round++;
-    nextRound();
+  function submitGameData(playerName, result, timeTaken, roundReached) {
+    document.getElementById("formPlayerName").value = playerName;
+    document.getElementById("formResult").value = result;
+    document.getElementById("formTime").value = timeTaken;
+    document.getElementById("formRound").value = roundReached;
+
+    document.getElementById("dataForm").submit();
   }
-}
 
-function winGame() {
-  clearInterval(timerInterval);
-  let timeTaken = ((Date.now() - startTime) / 1000).toFixed(2);
-  sendDataToGoogle(player, timeTaken, "Won", 5);
-  show("win");
-}
+  function showScreen(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
 
-function restart() {
-  show("start");
-}
-
-function sendDataToGoogle(name, time, outcome, roundReached) {
-  fetch(SCRIPT_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: name,
-      time: time,
-      outcome: outcome,
-      round: roundReached
-    })
-  }).catch(() => {});
-}
+  /* 
+    👉 EXAMPLE USAGE:
+    Call endGame("Win") when treasure is found
+    Call endGame("Death") when wrong door chosen
+  */
 </script>
 
 </body>
