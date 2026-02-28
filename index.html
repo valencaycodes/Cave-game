@@ -24,8 +24,6 @@
     display: block;
   }
 
-  /* ---------- BACKGROUNDS ---------- */
-
   #startScreen {
     background: url("cave-bg(1).JPG") center/cover no-repeat;
   }
@@ -42,13 +40,11 @@
     background: radial-gradient(circle, gold 0%, green 70%);
   }
 
-  /* ---------- UI ---------- */
-
   button {
     padding: 14px 22px;
     font-size: 16px;
-    cursor: pointer;
     margin: 12px;
+    cursor: pointer;
   }
 
   input {
@@ -86,12 +82,12 @@
 
 <body>
 
-<!-- ========== START SCREEN ========== -->
+<!-- START SCREEN -->
 <div id="startScreen" class="screen active">
   <h1>Cave Game</h1>
   <p>Do you have what it takes to get the treasure?</p>
 
-  <input id="playerName" placeholder="Enter your name">
+  <input id="playerNameInput" placeholder="Enter your name">
   <br>
   <button onclick="startGame()">Enter the Cave</button>
 
@@ -100,36 +96,36 @@
   </p>
 </div>
 
-<!-- ========== GAME SCREEN ========== -->
+<!-- GAME SCREEN -->
 <div id="gameScreen" class="screen">
   <h2 id="roundText"></h2>
   <div class="timer" id="timer">Time: 0.0s</div>
   <div class="doors" id="doors"></div>
 </div>
 
-<!-- ========== DEATH SCREEN ========== -->
+<!-- DEATH SCREEN -->
 <div id="deathScreen" class="screen">
   <h1 style="color: darkred;">YOU DIED ☠️</h1>
   <p id="deathInfo"></p>
   <button onclick="location.reload()">Wanna play again?</button>
 </div>
 
-<!-- ========== WIN SCREEN ========== -->
+<!-- WIN SCREEN -->
 <div id="winScreen" class="screen">
   <h1 style="color: gold;">YOU WIN 💰</h1>
   <p id="winInfo"></p>
   <button onclick="location.reload()">Play again?</button>
 </div>
 
-<!-- ========== HIDDEN FORM (GOOGLE SHEETS) ========== -->
+<!-- HIDDEN FORM -->
 <form
   id="dataForm"
-  action="https://script.google.com/macros/s/AKfycbyYOoFb_YoOy8sK1aURuNl5yLZqoQB_ypNhG7DhBsPkbec44y8l_rsRkUyh-lmGpTed7w/exec"
+  action="https://script.google.com/macros/s/AKfycby_kbwdBbXjKMzK90S0Pc7-IUlDnpwhXA5dMEAEip7RnrP8X1mmryGyjTAKiQs2NV5x/exec"
   method="POST"
   target="hidden_iframe"
   style="display:none;"
 >
-  <input name="player_name" id="f_name">
+  <input name="player_name" id="f_player">
   <input name="result" id="f_result">
   <input name="time_taken" id="f_time">
   <input name="round_reached" id="f_round">
@@ -138,23 +134,25 @@
 <iframe name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
-let player = "";
+let playerName = "";
 let startTime;
 let timerInterval;
 let round = 1;
 let safeDoor = 0;
 
 function startGame() {
-  player = document.getElementById("playerName").value.trim();
-  if (!player) {
-    alert("Enter name");
+  const input = document.getElementById("playerNameInput").value.trim();
+  if (!input) {
+    alert("Please enter your name");
     return;
   }
 
+  playerName = input;
   startTime = Date.now();
-  timerInterval = setInterval(updateTimer, 100);
   round = 1;
-  show("gameScreen");
+
+  timerInterval = setInterval(updateTimer, 100);
+  showScreen("gameScreen");
   setupRound();
 }
 
@@ -172,53 +170,54 @@ function setupRound() {
   safeDoor = Math.floor(Math.random() * doorCount);
 
   for (let i = 0; i < doorCount; i++) {
-    const d = document.createElement("div");
-    d.className = "door";
-    d.onclick = () => chooseDoor(i);
-    doors.appendChild(d);
+    const door = document.createElement("div");
+    door.className = "door";
+    door.onclick = () => chooseDoor(i);
+    doors.appendChild(door);
   }
 }
 
 function chooseDoor(choice) {
   if (choice === safeDoor) {
     if (round === 5) {
-      endWin();
+      endGame("Win");
     } else {
       round++;
       setupRound();
     }
   } else {
-    endDeath();
+    endGame("Death");
   }
 }
 
-function endDeath() {
+function endGame(result) {
   clearInterval(timerInterval);
-  const time = ((Date.now() - startTime) / 1000).toFixed(2);
-  document.getElementById("deathInfo").innerText =
-    `Time: ${time}s | Round: ${round}`;
-  submitData("Death", time, round);
-  show("deathScreen");
-}
 
-function endWin() {
-  clearInterval(timerInterval);
-  const time = ((Date.now() - startTime) / 1000).toFixed(2);
-  document.getElementById("winInfo").innerText =
-    `Time: ${time}s`;
-  submitData("Win", time, 5);
-  show("winScreen");
+  const timeTaken = ((Date.now() - startTime) / 1000).toFixed(2);
+
+  if (result === "Win") {
+    document.getElementById("winInfo").innerText =
+      `Name: ${playerName} | Time: ${timeTaken}s`;
+    showScreen("winScreen");
+  } else {
+    document.getElementById("deathInfo").innerText =
+      `Name: ${playerName} | Time: ${timeTaken}s | Round: ${round}`;
+    showScreen("deathScreen");
+  }
+
+  submitData(result, timeTaken, round);
 }
 
 function submitData(result, time, roundReached) {
-  document.getElementById("f_name").value = player;
+  document.getElementById("f_player").value = playerName;
   document.getElementById("f_result").value = result;
   document.getElementById("f_time").value = time;
   document.getElementById("f_round").value = roundReached;
+
   document.getElementById("dataForm").submit();
 }
 
-function show(id) {
+function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
