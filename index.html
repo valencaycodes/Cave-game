@@ -1,48 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Cave Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Cave Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: "Times New Roman", serif;
-      background: black;
-      color: white;
-      text-align: center;
-    }
+<style>
+  body {
+    margin: 0;
+    font-family: "Times New Roman", serif;
+    background: black;
+    color: white;
+    text-align: center;
+  }
 
-    .screen {
-      display: none;
-      min-height: 100vh;
-      padding: 20px;
-      box-sizing: border-box;
-    }
+  .screen {
+    display: none;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+  }
 
-    .active {
-      display: block;
-    }
+  .active {
+    display: block;
+  }
 
-    button {
-      padding: 12px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
+  button {
+    padding: 14px 22px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 10px;
+  }
 
-    input {
-      padding: 10px;
-      font-size: 16px;
-    }
+  input {
+    padding: 10px;
+    font-size: 16px;
+  }
 
-    .consent {
-      font-size: 10px;
-      opacity: 0.6;
-      margin-top: 10px;
-    }
-  </style>
+  .doors {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+  }
+
+  .door {
+    width: 90px;
+    height: 160px;
+    background: #4b2e1e;
+    border: 3px solid #d4af37;
+    cursor: pointer;
+  }
+
+  .timer {
+    font-size: 18px;
+    margin-top: 10px;
+  }
+
+  .consent {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-top: 10px;
+  }
+</style>
 </head>
 
 <body>
@@ -52,96 +73,138 @@
   <h1>Cave Game</h1>
   <p>Do you have what it takes to get the treasure?</p>
 
-  <input type="text" id="playerNameInput" placeholder="Enter your name" />
+  <input type="text" id="playerNameInput" placeholder="Enter your name">
 
   <br>
   <button onclick="startGame()">Enter the Cave</button>
 
   <p class="consent">
-    By playing, you consent to anonymous local data collection for academic purposes.
+    By playing, you consent to anonymous data collection for academic purposes.
   </p>
 </div>
 
-<!-- ========== GAME SCREEN (your doors go here) ========== -->
+<!-- ========== GAME SCREEN ========== -->
 <div id="gameScreen" class="screen">
-  <h2>Choose a door</h2>
-  <!-- YOUR DOOR LOGIC / BUTTONS GO HERE -->
+  <h2 id="roundText"></h2>
+  <div class="timer" id="timer">Time: 0.0s</div>
+
+  <div class="doors" id="doorsContainer"></div>
 </div>
 
 <!-- ========== END SCREEN ========== -->
 <div id="endScreen" class="screen">
-  <h2 id="endMessage"></h2>
-  <p id="timeText"></p>
-  <button onclick="location.reload()">Play again?</button>
+  <h1 id="endMessage"></h1>
+  <p id="endDetails"></p>
+  <button onclick="location.reload()">Wanna play again?</button>
 </div>
 
-<!-- ========== HIDDEN FORM (DATA SUBMISSION) ========== -->
+<!-- ========== HIDDEN FORM FOR GOOGLE SHEETS ========== -->
 <form
   id="dataForm"
-  action="https://script.google.com/macros/s/AKfycbzGBh8r0BKG7evKwX6rLKtTkM9naObZzN1DsJDt2gtWl55ladgE2Jh8e5bNGgmxSoklDw/exec"
+  action="https://script.googleusercontent.com/macros/echo?user_content_key=AY5xjrR_tR90SDsfZr-V_G0kgISfL2m994OF3_oruJTJko0DH2YCD3gpK_fu3kDS-dqcPWAYHQMQBriYXbI6NnaygE5mKkm8vDtjg2bw3BzLMsvD79SljhmngArBcHG3oJN3_YqR_xeMPbmAbRLQHQvPB2CWU15Rr8pBNLbtdsMbHiHpvw7G5Ke9-bgROcqV05JryYPfq7zimtcsUu6SyYt0QpVdsKMU5LmwEoOkfqCXoJ2EqKr_gZn7jc8Mw6F3poAYsTTozDSaSMDOmXrPK6I4ScwBiP5M_-a0S4xpy6Kn&lib=MyUecVRXifA8EXqP55XBNGJ6fuGE8wSLN"
   method="POST"
   target="hidden_iframe"
   style="display:none;"
 >
-  <input type="text" name="player_name" id="formPlayerName">
-  <input type="text" name="result" id="formResult">
-  <input type="text" name="time_taken" id="formTime">
-  <input type="text" name="round_reached" id="formRound">
+  <input name="player_name" id="formPlayerName">
+  <input name="result" id="formResult">
+  <input name="time_taken" id="formTime">
+  <input name="round_reached" id="formRound">
 </form>
 
 <iframe name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
-  let startTime;
-  let playerName = "";
-  let currentRound = 0;
+let playerName = "";
+let startTime;
+let timerInterval;
+let currentRound = 1;
+let safeDoor = 0;
 
-  function startGame() {
-    playerName = document.getElementById("playerNameInput").value.trim();
-    if (!playerName) {
-      alert("Please enter your name");
-      return;
+function startGame() {
+  playerName = document.getElementById("playerNameInput").value.trim();
+  if (!playerName) {
+    alert("Please enter your name");
+    return;
+  }
+
+  startTime = Date.now();
+  startTimer();
+  currentRound = 1;
+  showScreen("gameScreen");
+  setupRound();
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    document.getElementById("timer").innerText = "Time: " + elapsed + "s";
+  }, 100);
+}
+
+function setupRound() {
+  document.getElementById("roundText").innerText =
+    "Round " + currentRound + " — Choose a door";
+
+  const doorsContainer = document.getElementById("doorsContainer");
+  doorsContainer.innerHTML = "";
+
+  let doorCount = currentRound <= 2 ? 2 : 3;
+
+  if (currentRound === 5) {
+    safeDoor = Math.floor(Math.random() * doorCount);
+  } else {
+    safeDoor = Math.floor(Math.random() * doorCount);
+  }
+
+  for (let i = 0; i < doorCount; i++) {
+    const door = document.createElement("div");
+    door.className = "door";
+    door.onclick = () => chooseDoor(i);
+    doorsContainer.appendChild(door);
+  }
+}
+
+function chooseDoor(index) {
+  if (index === safeDoor) {
+    if (currentRound === 5) {
+      endGame("Win");
+    } else {
+      currentRound++;
+      setupRound();
     }
-
-    startTime = Date.now();
-    currentRound = 1;
-
-    showScreen("gameScreen");
+  } else {
+    endGame("Death");
   }
+}
 
-  function endGame(result) {
-    const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+function endGame(result) {
+  clearInterval(timerInterval);
 
-    document.getElementById("endMessage").innerText =
-      result === "Win" ? "You found the treasure!" : "You died.";
+  const timeTaken = ((Date.now() - startTime) / 1000).toFixed(2);
 
-    document.getElementById("timeText").innerText =
-      "Time taken: " + elapsedTime + " seconds";
+  document.getElementById("endMessage").innerText =
+    result === "Win" ? "You found the treasure!" : "You died.";
 
-    submitGameData(playerName, result, elapsedTime, currentRound);
+  document.getElementById("endDetails").innerText =
+    "Time taken: " + timeTaken + " seconds\nRound reached: " + currentRound;
 
-    showScreen("endScreen");
-  }
+  submitGameData(playerName, result, timeTaken, currentRound);
+  showScreen("endScreen");
+}
 
-  function submitGameData(playerName, result, timeTaken, roundReached) {
-    document.getElementById("formPlayerName").value = playerName;
-    document.getElementById("formResult").value = result;
-    document.getElementById("formTime").value = timeTaken;
-    document.getElementById("formRound").value = roundReached;
+function submitGameData(name, result, time, round) {
+  document.getElementById("formPlayerName").value = name;
+  document.getElementById("formResult").value = result;
+  document.getElementById("formTime").value = time;
+  document.getElementById("formRound").value = round;
+  document.getElementById("dataForm").submit();
+}
 
-    document.getElementById("dataForm").submit();
-  }
-
-  function showScreen(id) {
-    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
-  }
-
-  /* 
-    👉 EXAMPLE USAGE:
-    Call endGame("Win") when treasure is found
-    Call endGame("Death") when wrong door chosen
-  */
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
 </script>
 
 </body>
